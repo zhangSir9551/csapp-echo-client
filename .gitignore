@@ -1,0 +1,12 @@
+# 编译产物
+main
+client
+*.o
+*.out
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
