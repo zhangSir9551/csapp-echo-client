@@ -1,31 +1,45 @@
 # include "csapp.h"
 
+void echo(int connfd);
+
 int main(int argc, char **argv)
 {
-	int clientfd;	   // 客户端套接字描述符
-	char *host, *port; // 服务器的主机名（或者IP）和端口号
-	char buf[MAXLINE]; // 数据缓冲区
-	rio_t rio;		   // Rio 的读缓冲区结构体，用于带缓冲的读取
+	int listenfd, connfd;
+	socklen_t clientlen;
+	struct sockaddr_storage clientaddr;
+	char client_hostname[MAXLINE], client_port[MAXLINE];
 
-	if (argc != 3) // 要求两个命令行参数：主机名和端口号
+	if(argc != 2)
 	{
-		fprintf(stderr, "usage: %s <host> <port> \n", argv[0]);
+		fprintf(stderr, "usage: %s <port>\n", argv[0]);
 		exit(0);
 	}
 
-	host = argv[1];
-	port = argv[2];
-
-	clientfd = Open_clientfd(host, port);
-	Rio_readinitb(&rio, clientfd);
-
-	while(Fgets(buf, MAXLINE, stdin) != NULL)
+	listenfd = Open_listenfd(atoi(argv[1]));
+	while(1)
 	{
-		Rio_writen(clientfd, buf, strlen(buf));
-		Rio_readlineb(&rio, buf, MAXLINE);
-		Fputs(buf, stdout);
+		clientlen = sizeof(struct sockaddr_storage);
+		connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
+		getnameinfo((SA *)&clientaddr, clientlen, client_hostname, MAXLINE,
+					client_port, MAXLINE, 0);
+		printf("Connected to (%s, %s)\n", client_hostname, client_port);
+		echo(connfd);
+		Close(connfd);
 	}
-
-	Close(clientfd);
 	exit(0);
+}
+
+void echo (int connfd)
+{
+	size_t n;
+	char buf[MAXLINE];
+	rio_t rio;
+
+	Rio_readinitb(&rio, connfd);
+
+	while((n = Rio_readlineb(&rio, buf, MAXLINE)) != 0)
+	{
+		printf("server received %d bytes\n", (int)n);
+		Rio_writen(connfd, buf, n);
+	}
 }
