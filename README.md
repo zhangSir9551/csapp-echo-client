@@ -4,10 +4,11 @@ CS:APP 第 11 章 TCP echo client.
 
 ## 编译
 
-g++ -o client csapp.cpp main.cpp -lpthread
+g++ -o client csapp.cpp csapp.h client.cpp -lpthread
+
+g++ -o client csapp.cpp csapp.h server.cpp -lpthread
 
 ## 使用
 
-先启动 echo server（例如 `nc -l 8080`），然后：
-
+./server 8080
 ./client localhost 8080
